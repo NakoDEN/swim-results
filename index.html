@@ -106,7 +106,7 @@
             }
         }
 
-        function updateChart() {
+       function updateChart() {
             const ctx = document.getElementById("swimChart").getContext("2d");
             const sortedData = data.filter(d => d.time).sort((a, b) => new Date(a.date) - new Date(b.date));
             const labels = sortedData.map(d => d.date);
@@ -114,7 +114,11 @@
             const split1s = sortedData.map(d => parseFloat(d.split1.replace(":", ".")));
             const split2s = sortedData.map(d => parseFloat(d.split2.replace(":", ".")));
 
-            if (window.swimChart) window.swimChart.destroy();
+            // Додаємо перевірку на існування window.swimChart
+            if (window.swimChart) {
+                window.swimChart.destroy();
+            }
+            
             window.swimChart = new Chart(ctx, {
                 type: "line",
                 data: {
@@ -127,36 +131,6 @@
                 },
                 options: { responsive: true, scales: { y: { beginAtZero: false } } }
             });
-        }
-
-        function loadData() {
-            const table = document.getElementById("resultsTable").getElementsByTagName("tbody")[0];
-            table.innerHTML = "";
-            data.forEach(d => {
-                const row = table.insertRow();
-                row.innerHTML = `
-                    <td><input type="date" value="${d.date}" onchange="saveData()"></td>
-                    <td>
-                        <select onchange="saveData()">
-                            <option ${d.distance === "100 в/с" ? "selected" : ""}>100 в/с</option>
-                            <option ${d.distance === "100 брас" ? "selected" : ""}>100 брас</option>
-                        </select>
-                    </td>
-                    <td>
-                        <select onchange="saveData()">
-                            <option ${d.pool === "25м" ? "selected" : ""}>25м</option>
-                            <option ${d.pool === "50м" ? "selected" : ""}>50м</option>
-</select>
-                    </td>
-                    <td><input type="text" value="${d.time}" onchange="saveData()"></td>
-                    <td><input type="text" value="${d.split1}" onchange="saveData()"></td>
-                    <td><input type="text" value="${d.split2}" onchange="saveData()"></td>
-                    <td><input type="text" value="${d.location}" onchange="saveData()"></td>
-                    <td><textarea onchange="saveData()">${d.comment}</textarea></td>
-                    <td><button onclick="deleteRow(this)">❌</button></td>
-                `;
-            });
-            updateChart();
         }
 
         loadData();
