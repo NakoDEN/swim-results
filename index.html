@@ -1,4 +1,114 @@
-const sortedData = data.filter(d => d.time).sort((a, b) => new Date(a.date) - new Date(b.date));
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результати запливів</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        table { width: 90%; margin: 20px auto; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        input, select, textarea { width: 100%; }
+        canvas { max-width: 800px; margin: 20px auto; }
+    </style>
+</head>
+<body>
+    <h1>Результати запливів</h1>
+    
+    <table id="resultsTable">
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Дистанція</th>
+                <th>Басейн</th>
+                <th>Час</th>
+                <th>Спліт 1</th>
+                <th>Спліт 2</th>
+                <th>Місце проведення</th>
+                <th>Коментар</th>
+                <th>Видалити</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <button onclick="addRow()">Додати заплив</button>
+    <button onclick="clearData()">Очистити всі дані</button>
+
+    <h2>Графік прогресу</h2>
+    <canvas id="swimChart"></canvas>
+
+    <script>
+        let data = JSON.parse(localStorage.getItem("swimData")) || [];
+
+        function addRow() {
+            const table = document.getElementById("resultsTable").getElementsByTagName("tbody")[0];
+            const row = table.insertRow();
+
+            row.innerHTML = `
+                <td><input type="date" onchange="saveData()"></td>
+                <td>
+                    <select onchange="saveData()">
+                        <option>100 в/с</option>
+                        <option>100 брас</option>
+                    </select>
+                </td>
+                <td>
+                    <select onchange="saveData()">
+                        <option>25м</option>
+                        <option>50м</option>
+                    </select>
+                </td>
+                <td><input type="text" placeholder="1:00.00" onchange="saveData()"></td>
+                <td><input type="text" placeholder="30.00" onchange="saveData()"></td>
+                <td><input type="text" placeholder="30.00" onchange="saveData()"></td>
+                <td><input type="text" placeholder="Місто" onchange="saveData()"></td>
+                <td><textarea placeholder="Коментар" onchange="saveData()"></textarea></td>
+                <td><button onclick="deleteRow(this)">❌</button></td>
+            `;
+
+            saveData();
+        }
+
+        function deleteRow(button) {
+            const row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+            saveData();
+        }
+
+        function saveData() {
+            const table = document.getElementById("resultsTable").getElementsByTagName("tbody")[0];
+            data = [];
+
+            for (const row of table.rows) {
+                data.push({
+                    date: row.cells[0].querySelector("input").value,
+                    distance: row.cells[1].querySelector("select").value,
+                    pool: row.cells[2].querySelector("select").value,
+                    time: row.cells[3].querySelector("input").value,
+                    split1: row.cells[4].querySelector("input").value,
+                    split2: row.cells[5].querySelector("input").value,
+                    location: row.cells[6].querySelector("input").value,
+                    comment: row.cells[7].querySelector("textarea").value
+                });
+            }
+
+            localStorage.setItem("swimData", JSON.stringify(data));
+            updateChart();
+        }
+
+        function clearData() {
+            if (confirm("Очистити всі дані?")) {
+                localStorage.removeItem("swimData");
+                location.reload();
+            }
+        }
+
+        function updateChart() {
+            const ctx = document.getElementById("swimChart").getContext("2d");
+            const sortedData = data.filter(d => d.time).sort((a, b) => new Date(a.date) - new Date(b.date));
             const labels = sortedData.map(d => d.date);
             const times = sortedData.map(d => parseFloat(d.time.replace(":", ".")));
             const split1s = sortedData.map(d => parseFloat(d.split1.replace(":", ".")));
@@ -36,7 +146,7 @@ const sortedData = data.filter(d => d.time).sort((a, b) => new Date(a.date) - ne
                         <select onchange="saveData()">
                             <option ${d.pool === "25м" ? "selected" : ""}>25м</option>
                             <option ${d.pool === "50м" ? "selected" : ""}>50м</option>
-                        </select>
+</select>
                     </td>
                     <td><input type="text" value="${d.time}" onchange="saveData()"></td>
                     <td><input type="text" value="${d.split1}" onchange="saveData()"></td>
